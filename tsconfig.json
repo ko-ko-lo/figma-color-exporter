@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["es6"],
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "esnext", // leverage the latest JavaScript features
     "strict": true,
     "typeRoots": [
       "./node_modules/@types",
       "./node_modules/@figma"
-    ]
+    ],
+    "outDir": "./dist", // direct js output to this folder
   }
 }

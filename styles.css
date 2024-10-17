@@ -1,0 +1,58 @@
+:root {
+  --light-brown: #f4eeec;
+  --mid-brown: #b99589;
+  --mid-berry: #3f1047;
+  --dark-berry: #1d0721;
+}
+
+html {
+  margin: 0 48px;
+  padding: 0;
+}
+
+body {
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  background-color: var(--dark-berry);
+  color: var(--light-brown);
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 72px 0 32px;
+}
+
+h2 {
+  font-size: 21px;
+  margin-bottom: 16px;
+}
+
+p {
+  font-size: 18px;
+  line-height: 1.4;
+  margin-bottom: 48px;
+}
+
+button {
+  border-radius: 4px;
+  padding: 14px 32px;
+  font-size: 16px;
+  letter-spacing: 7%;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.primary-button {
+  background-color: var(--mid-brown);
+  color: var(--dark-berry);
+}
+
+.secondary-button {
+  background-color: var(--dark-berry);
+  color: var(--light-brown);
+  border: 2px solid var(--mid-brown);
+}

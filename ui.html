@@ -2,15 +2,213 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Color Code Exporter</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --light-brown: #f4eeec;
+        --mid-brown: #b99589;
+        --mid-berry: #3f1047;
+        --dark-berry: #1d0721;
+        --button-padding: 14px 32px;
+        --dropdown-padding: 14px 24px;
+        --radius: 4px;
+      }
+
+      html {
+        margin: 0 32px;
+        padding: 0;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Lato", sans-serif;
+        font-weight: 300;
+        font-size: 16px;
+        font-style: normal;
+        background-color: var(--dark-berry);
+        color: var(--light-brown);
+      }
+
+      h1 {
+        font-size: 24px;
+        font-weight: 500;
+        margin: 48px 0 24px;
+      }
+
+      h2 {
+        font-size: 20px;
+        font-weight: 500;
+        margin-bottom: 16px;
+      }
+
+      p {
+        line-height: 1.6;
+        margin-bottom: 32px;
+      }
+
+      button {
+        font-family: "Lato", sans-serif;
+        border-radius: var(--radius);
+        padding: var(--button-padding);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 400;
+      }
+
+      button:hover {
+        cursor: pointer;
+      }
+
+      .primary-button {
+        background-color: var(--mid-brown);
+        color: var(--dark-berry);
+        border: 2px solid var(--mid-brown);
+      }
+
+      .secondary-button {
+        background-color: var(--dark-berry);
+        color: var(--light-brown);
+        border: 2px solid var(--mid-brown);
+        margin-right: 24px;
+      }
+
+      .flex {
+        display: flex;
+        justify-content: flex-end;
+        margin: 48px 0 64px;
+      }
+
+      .dropdown {
+        position: relative;
+        /*display: none;*/
+        width: 100%;
+      }
+
+      .dropdown-btn {
+        padding: var(--dropdown-padding);
+        margin-bottom: 40px;
+        text-align: left;
+        border: 2px solid var(--mid-brown);
+        border-radius: var(--radius);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .dropdown-btn::after {
+        content: "\25BC";
+        font-size: 16px;
+        color: var(--mid-brown);
+      }
+
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: var(--mid-berry);
+        z-index: 1;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .dropdown-content input {
+        margin-right: 10px;
+      }
+
+      .dropdown-content label {
+        display: block;
+        padding: 10px;
+        cursor: pointer;
+      }
+
+      .dropdown-content label:hover {
+        background-color: var(--dark-berry);
+      }
+
+      .show {
+        display: block;
+      }
+
+      .no-collections {
+        font-weight: 600;
+        padding-left: 16px;
+      }
+
+      /* Hide the default radio button */
+      input[type="radio"] {
+        display: none;
+      }
+
+      /* Style for the custom radio button */
+      input[type="radio"] + label {
+        position: relative;
+        padding-left: 30px; /* Space for the custom indicator */
+        margin-right: 24px;
+        cursor: pointer;
+      }
+
+      /* Custom indicator */
+      input[type="radio"] + label::before {
+        content: ''; /* Empty content */
+        position: absolute;
+        left: 0; /* Align to the left */
+        top: 50%; /* Center vertically */
+        transform: translateY(-50%); /* Adjust vertical centering */
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--mid-brown);
+        border-radius: 50%; /* Make it circular */
+      }
+
+      /* Change background when checked */
+      input[type="radio"]:checked + label::before {
+        background-color: var(--mid-brown);
+      }
+
+ </style>
   </head>
   <body>
-    <h2>Rectangle Creator</h2>
-    <p>Count: <input id="count" type="number" value="5" /></p>
-    <button id="create">Create</button>
-    <button id="cancel">Cancel</button>
+    <h1>Transform Your Figma Palette into Code Instantly</h1>
+    <p>
+      This Figma Plugin allows you to effortlessly convert your Color
+      Collections into SCSS and CSS variables or JSON data, streamlining the handoff from
+      design to development.
+      <h2>1. Select your Color Collection(s)</h2>
+      <div class="dropdown">
+        <div class="dropdown" id="colorDropdown">
+          <div class="dropdown-btn" id="dropdownBtn">
+            Available Collection(s)
+          </div>
+          <div class="dropdown-content" id="dropdownContent">
+            <!-- Checkboxes will be populated here
+            <input type="checkbox" value="Colors" class="collection-checkbox">-->
+          </div>
+        </div>
+      </div>
+      <h2>2. Select your Output Format</h2>
+      <input type="radio" id="scss" name="output-format" value="SCSS">
+     <label for="scss">SCSS</label>
+      <input type="radio" id="css" name="output-format" value="CSS">
+     <label for="css">CSS</label>
+      <input type="radio" id="json" name="output-format" value="JSON">
+     <label for="json">JSON</label>
+    </p>
+    <div class="flex">
+      <button id="cancel" class="secondary-button">Cancel</button>
+      <button id="create" class="primary-button">Generate Output</button>
+    </div>
+
     <script>
       document.getElementById("create").onclick = () => {
         const textbox = document.getElementById("count");
@@ -24,6 +222,7 @@
       document.getElementById("cancel").onclick = () => {
         parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
       };
+
     </script>
   </body>
 </html>
