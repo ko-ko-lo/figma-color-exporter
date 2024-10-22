@@ -19,37 +19,49 @@
         --button-padding: 14px 32px;
         --dropdown-padding: 14px 24px;
         --radius: 4px;
+        --size-0: 0;
+        --size-2: 2px;
+        --size-8: 8px;
+        --size-10: 10px;
+        --size-16: 16px;
+        --size-20: 20px;
+        --size-24: 24px;
+        --size-32: 32px;
+        --size-40: 40px;
+        --size-48: 48px;
+        --size-64: 64px;
+        --percentage-50: 50%;
+        --font-weight-300: 300;
+        --font-weight-400: 400;
+        --font-weight-500: 500;
       }
 
       html {
-        margin: 0 32px;
-        padding: 0;
+        margin: var(--size-0) var(--size-32);
+        padding: var(--size-0);
       }
 
       body {
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
+        margin: var(--size-0);
+        padding: var(--size-0);
         font-family: "Lato", sans-serif;
-        font-weight: 300;
-        font-size: 16px;
+        font-weight: var(--font-weight-300);
+        font-size: var(--size-16);
         font-style: normal;
         background-color: var(--dark-berry);
         color: var(--light-brown);
       }
 
       h1 {
-        font-size: 24px;
-        font-weight: 500;
-        margin: 48px 0 24px;
+        font-size: var(--size-24);
+        font-weight: var(--font-weight-500);
+        margin: var(--size-48) var(--size-0) var(--size-24);
       }
 
       h2 {
-        font-size: 20px;
-        font-weight: 500;
-        margin: 40px 0 16px;
+        font-size: var(--size-20);
+        font-weight: var(--font-weight-500);
+        margin: var(--size-40) var(--size-0) var(--size-16);
       }
 
       p {
@@ -62,7 +74,7 @@
         padding: var(--button-padding);
         letter-spacing: 1px;
         text-transform: uppercase;
-        font-weight: 400;
+        font-weight: var(--font-weight-500);
         transition: background-color 0.3s ease, transform 0.3s ease;
       }
 
@@ -73,11 +85,11 @@
       .primary-button {
         background-color: var(--mid-brown);
         color: var(--dark-berry);
-        border: 2px solid var(--mid-brown);
+        border: var(--size-2) solid var(--mid-brown);
       }
 
       .primary-button:hover {
-        background-color: #cfb8af;
+        background-color: var(--light-brown);
       }
 
       .secondary-button:hover {
@@ -87,38 +99,40 @@
       .secondary-button {
         background-color: var(--dark-berry);
         color: var(--light-brown);
-        border: 2px solid var(--mid-brown);
-        margin-right: 24px;
+        border: var(--size-2) solid var(--mid-brown);
+        margin-right: var(--size-24);
       }
 
       .flex {
         display: flex;
         justify-content: flex-end;
-        margin: 48px 0 64px;
+        margin: var(--size-48) var(--size-0) var(--size-64);
       }
 
-      /* Start Dropdown Styles */
+      /* Dropdown Styles */
       .dropdown {
         position: relative;
-        /*display: none;*/
+        display: inline-block;
         width: 100%;
       }
 
-      .dropdown-btn {
-        padding: var(--dropdown-padding);
-        text-align: left;
-        border: 2px solid var(--mid-brown);
+      .dropdown-toggle {
+        border: var(--size-2) solid var(--mid-brown);
         border-radius: var(--radius);
+        padding: var(--dropdown-padding);
         cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        width: auto;
+        text-align: left;
       }
 
-      .dropdown-btn::after {
-        content: "\25BC";
-        font-size: 16px;
-        color: var(--mid-brown);
+      .dropdown-toggle::after {
+        content: "▼";
+        font-size: 14px;
+        position: absolute;
+        right: var(--size-24); /* Align it to the right */
+        top: var(--percentage-50);
+        transform: translateY(-50%);
+        pointer-events: none; /* Icon won't affect click events */
       }
 
       .dropdown-content {
@@ -126,19 +140,32 @@
         position: absolute;
         background-color: var(--mid-berry);
         z-index: 1;
-        width: calc(100% - 48px);
+        width: calc(100% - var(--size-48));
         max-height: 200px;
-        overflow-y: auto;
-        padding: 8px 24px;
+        overflow-y: scroll;
+        padding: var(--size-8) var(--size-24);
       }
 
-      .dropdown-content input[type="checkbox"] {
-        margin-right: 10px;
+      .dropdown-content.active {
+        display: block; /* Show when active */
+        padding: var(--size-8) var(--size-24);
+      }
+
+      .checkbox-item,
+      .dropdown-content label {
+        display: flex;
+        align-items: center;
+      }
+
+      .checkbox-item {
+        padding: var(--size-10) var(--size-0);
+      }
+
+      .checkbox-item input {
+        margin-right: var(--size-10);
       }
 
       .dropdown-content label {
-        display: block;
-        padding: 10px;
         cursor: pointer;
       }
 
@@ -146,55 +173,19 @@
         color: var(--light-berry);
       }
 
-      .show {
-        display: block;
+      label[for="selectAll"] {
+        font-weight: var(--font-weight-500);
       }
 
-      .no-collections {
-        font-weight: 600;
-        padding-left: 16px;
-      }
-
-      /* Start Radio Button Styles */
-      /* Hide the default radio button */
-      input[type="radio"],
-      input[type="checkbox"] {
-        display: none;
-      }
-
-      /* Style for the custom radio button */
-      input[type="radio"] + label,
-      input[type="checkbox"] + label {
-        position: relative;
-        padding-left: 35px;
-        cursor: pointer;
+      /* Fix: Display checkboxes to make them clickable */
+      input[type="checkbox"],
+      input[type="radio"] {
+        display: inline-block;
+        accent-color: var(--mid-brown);
       }
 
       input[type="radio"] + label {
-        margin-right: 24px;
-      }
-
-      /* Custom indicator */
-      input[type="radio"] + label::before,
-      input[type="checkbox"] + label::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 50%; /* Center vertically */
-        transform: translateY(-50%); /* Adjust vertical centering */
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--mid-brown);
-        border-radius: var(--radius);
-        margin-right: 24px;
-      }
-
-      input[type="radio"] + label::before {
-        border-radius: 50%;
-      }
-
-      input[type="radio"]:checked + label::before {
-        background-color: var(--mid-brown);
+        margin-right: var(--size-24);
       }
     </style>
   </head>
@@ -205,64 +196,17 @@
       Collections into SCSS and CSS variables or JSON data, streamlining the
       handoff from design to development.
     </p>
+
     <h2>1. Select your Color Collection(s)</h2>
     <div class="dropdown">
-      <div class="dropdown" id="colorDropdown">
-        <div class="dropdown-btn" id="dropdownBtn">Available Collection(s)</div>
-        <div class="dropdown-content" id="dropdownContent">
-          <!-- Checkboxes will be populated here -->
-          <input
-            type="checkbox"
-            id="collection1"
-            name="colorCollection"
-            value="Collection 1"
-          />
-          <label for="collection1">Collection 1</label>
-          <input
-            type="checkbox"
-            id="collection2"
-            name="colorCollection"
-            value="Collection 2"
-          />
-          <label for="collection2">Collection 2</label>
-          <input
-            type="checkbox"
-            id="collection3"
-            name="colorCollection"
-            value="Collection 3"
-          />
-          <label for="collection3">Collection 3</label>
-          <input
-            type="checkbox"
-            id="collection4"
-            name="colorCollection"
-            value="Collection 4"
-          />
-          <label for="collection4">Collection 4</label>
-          <input
-            type="checkbox"
-            id="collection5"
-            name="colorCollection"
-            value="Collection 5"
-          />
-          <label for="collection5">Collection 5</label>
-          <input
-            type="checkbox"
-            id="collection4"
-            name="colorCollection"
-            value="Collection 4"
-          />
-          <label for="collection4">Collection 4</label>
-          <input
-            type="checkbox"
-            id="collection4"
-            name="colorCollection"
-            value="Collection 4"
-          />
-          <label for="collection4">Collection 4</label>
-        </div>
+      <div id="dropdownToggle" class="dropdown-toggle">
+        Available Collection(s)
+      </div>
+      <div id="dropdownContent" class="dropdown-content">
+        <!-- Checkboxes will be populated here -->
       </div>
     </div>
+
     <h2>2. Select your Output Format</h2>
     <input type="radio" id="scss" name="output-format" value="SCSS" />
     <label for="scss">SCSS</label>
@@ -276,171 +220,111 @@
     </div>
 
     <script>
-      // Start testing
-      document.getElementById("dropdownBtn").onclick = () => {
-        const dropdownContent = document.getElementById("dropdownContent");
-        dropdownContent.classList.toggle("show");
-      };
+      // Notify the plugin that the UI is ready
+      window.parent.postMessage({ pluginMessage: { type: "uiReady" } }, "*");
 
-      // Close dropdown if clicked outside
-      window.onclick = (event) => {
-        if (!event.target.matches("#dropdownBtn")) {
+      // Handle messages from the plugin
+      window.addEventListener("message", (event) => {
+        const message = event.data.pluginMessage;
+
+        if (message?.type === "populateDropdown") {
           const dropdownContent = document.getElementById("dropdownContent");
-          if (dropdownContent.classList.contains("show")) {
-            dropdownContent.classList.remove("show");
+          dropdownContent.innerHTML = ""; // Clear previous options
+
+          // Populate checkboxes for individual collections
+          if (message.collections.length === 0) {
+            dropdownContent.innerHTML +=
+              "<p>No color collections found in your Figma file. Please create a color collection to proceed.</p>";
+          } else {
+            // Add "Select All" checkbox at the top if there are collections
+            const allCollectionsOption = document.createElement("div");
+            allCollectionsOption.classList.add("checkbox-item");
+
+            const selectAllCheckbox = document.createElement("input");
+            selectAllCheckbox.type = "checkbox";
+            selectAllCheckbox.id = "selectAll";
+
+            const selectAllLabel = document.createElement("label");
+            selectAllLabel.htmlFor = "selectAll";
+            selectAllLabel.textContent = "Select All";
+
+            allCollectionsOption.appendChild(selectAllCheckbox);
+            allCollectionsOption.appendChild(selectAllLabel);
+            dropdownContent.appendChild(allCollectionsOption);
+
+            // Event listener for "Select All" checkbox
+            selectAllCheckbox.addEventListener("change", (event) => {
+              const isChecked = event.target.checked;
+              document
+                .querySelectorAll(".collection-checkbox")
+                .forEach((checkbox) => (checkbox.checked = isChecked));
+              checkIfAnyChecked(); // Update 'Select All' state when items change
+            });
+
+            // Now populate individual collections
+            message.collections.forEach((collection) => {
+              const checkboxItem = document.createElement("div");
+              checkboxItem.classList.add("checkbox-item");
+
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.id = collection.id;
+              checkbox.value = collection.id;
+              checkbox.classList.add("collection-checkbox");
+
+              const label = document.createElement("label");
+              label.htmlFor = collection.id;
+              label.textContent = collection.name;
+
+              checkboxItem.appendChild(checkbox);
+              checkboxItem.appendChild(label);
+
+              dropdownContent.appendChild(checkboxItem);
+
+              // Add listener to update "Select All" state when any item changes
+              checkbox.addEventListener("change", checkIfAnyChecked);
+            });
           }
+        } else {
+          console.warn("Unexpected message type.");
         }
-      };
-      // End testing
+      });
 
-      document.getElementById("create").onclick = () => {
-        // Helper function to get an element by ID
-        const getElement = (id) => document.getElementById(id);
-
-        // Helper function to send messages to the parent frame
-        const sendPostMessage = (type, data = {}) => {
-          parent.postMessage(
-            {
-              pluginMessage: {
-                type,
-                ...data,
-              },
-            },
-            "*"
-          );
-        };
-
-        // Get all checked checkboxes in the dropdown and map to their values
-        const selectedCollections = Array.from(
-          document.querySelectorAll(".dropdown-content input:checked")
-        ).map((checkbox) => checkbox.value);
-
-        // Send a message to "create" with selected collections
-        sendPostMessage("create", {
-          collectionNames: selectedCollections,
-        });
-
-        // Event listener for dropdown button click to toggle the visibility of the dropdown
-        getElement("dropdownBtn")?.addEventListener("click", (event) => {
-          getElement("dropdownContent")?.classList.toggle("show");
-          event.stopPropagation();
-        });
-
-        // Prevent dropdown content click events from propagating (so the dropdown doesn't close)
-        getElement("dropdownContent")?.addEventListener("click", (event) => {
-          event.stopPropagation();
-        });
-
-        // Global click event listener to close the dropdown if clicked outside
-        window.addEventListener("click", (event) => {
-          if (
-            !event.target.matches(".dropdown-btn") &&
-            !event.target.matches(".dropdown-content") &&
-            !event.target.closest(".dropdown-content")
-          ) {
-            document
-              .querySelectorAll(".dropdown-content.show")
-              .forEach((dropdown) => dropdown.classList.remove("show"));
-          }
-        });
-
-        // Event listener for messages from the parent frame
-        window.addEventListener("message", (event) => {
-          const { type, collections, xmlContent } = event.data.pluginMessage;
-
-          switch (type) {
-            case "populateDropdown":
-              populateDropdown(collections);
-              break;
-            case "export-xml":
-              saveFile(xmlContent);
-              break;
-          }
-        });
-
-        // Event listener for the checkbox to enable/disable the dropdown
-        getElement("enableDropdown")?.addEventListener("change", (event) => {
-          const dropdown = getElement("colorDropdown");
-          dropdown.style.display = event.target.checked ? "block" : "none";
-          sendPostMessage("toggleDropdown", {
-            checked: event.target.checked,
-          });
-        });
-
-        // Function to populate the dropdown with collections
-        function populateDropdown(collections) {
-          const dropdownContent = getElement("dropdownContent");
-          if (!dropdownContent) return;
-
-          // Clear existing options
-          dropdownContent.innerHTML = "";
-
-          // If no collections, show a message
-          if (collections.length === 0) {
-            const noCollectionsMessage = document.createElement("p");
-            noCollectionsMessage.textContent =
-              "No color collections found in your Figma file. Please create a color collection to proceed.";
-            noCollectionsMessage.classList.add("no-collections");
-            dropdownContent.appendChild(noCollectionsMessage);
-            return;
-          }
-
-          // Create and append a "Select All" option
-          const allCollectionsOption = document.createElement("label");
-          allCollectionsOption.innerHTML =
-            '<input type="checkbox" id="selectAll"> Select All';
-          dropdownContent.appendChild(allCollectionsOption);
-
-          // Event listener for the "Select All" checkbox
-          const selectAllCheckbox = getElement("selectAll");
-          selectAllCheckbox?.addEventListener("change", (event) => {
-            document
-              .querySelectorAll(".collection-checkbox")
-              .forEach((checkbox) => (checkbox.checked = event.target.checked));
-            checkIfAnyChecked();
-          });
-
-          // Append each collection as a checkbox option
-          collections.forEach((collection) => {
-            const option = document.createElement("label");
-            option.innerHTML = `<input type="checkbox" value="${collection.name}" class="collection-checkbox"> ${collection.name}`;
-            dropdownContent.appendChild(option);
-          });
-
-          // Event listener for individual collection checkboxes
-          dropdownContent.addEventListener("change", (event) => {
-            if (event.target.classList.contains("collection-checkbox")) {
-              const allCheckbox = getElement("selectAll");
-              if (allCheckbox) {
-                allCheckbox.checked = Array.from(
-                  dropdownContent.querySelectorAll(".collection-checkbox")
-                ).every((checkbox) => checkbox.checked);
-              }
-              checkIfAnyChecked();
-            }
-          });
-          checkIfAnyChecked();
+      // Function to check if all checkboxes are checked and update 'Select All'
+      function checkIfAnyChecked() {
+        const allCheckboxes = document.querySelectorAll(".collection-checkbox");
+        const allChecked = Array.from(allCheckboxes).every((cb) => cb.checked);
+        const selectAllCheckbox = document.getElementById("selectAll");
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = allChecked;
         }
+      }
 
-        // Event listener for messages from the parent frame
-        window.addEventListener("message", (event) => {
-          const { type, xmlContent } = event.data.pluginMessage;
-          // Check if the message type is for exporting XML
-          if (type === "export-xml") {
-            saveFile(xmlContent);
-          }
-        });
+      // Toggle the dropdown visibility when clicked
+      const dropdownToggle = document.getElementById("dropdownToggle");
+      const dropdownContent = document.getElementById("dropdownContent");
 
-        // Function to check if any checkboxes are checked
-        function checkIfAnyChecked() {
-          // This function is used only to update the 'Select All' checkbox state
+      dropdownToggle.addEventListener("click", () => {
+        dropdownContent.classList.toggle("active");
+      });
+
+      // Close dropdown if clicked outside of it
+      window.addEventListener("click", function (event) {
+        if (!dropdownToggle.contains(event.target)) {
+          dropdownContent.classList.remove("active");
         }
-      };
+      });
 
-      // When "cancel" close the iframe
-      document.getElementById("cancel").onclick = () => {
-        parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
-      };
+      // Prevent dropdown content click events from propagating (so the dropdown doesn't close)
+      dropdownContent.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+
+      // Event listener for the "Cancel" button click
+      document.getElementById("cancel").addEventListener("click", () => {
+        // Send a cancel message to the parent frame
+        window.parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+      });
     </script>
   </body>
 </html>

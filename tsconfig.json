@@ -8,6 +8,6 @@
       "./node_modules/@types",
       "./node_modules/@figma"
     ],
-    "outDir": "./dist", // direct js output to this folder
+    "outDir": "./dist" // direct js output to this folder
   }
 }
