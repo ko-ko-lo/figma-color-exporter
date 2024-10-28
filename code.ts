@@ -26,43 +26,47 @@ async function getColorVariablesByIds(
   );
 }
 
-// Reusable function to format color variable elements in hex
-function createColorElements(variable: Variable): string[] {
-  const valuesByMode = variable.valuesByMode;
-  const cleanVariableName = variable.name.split("/").pop();
-  return Object.entries(valuesByMode).map(([mode, colorValue]) => {
-    const hexString = rgbToHex(colorValue as RGBA);
-    return `Mode: ${mode}, $${cleanVariableName}: ${hexString}`;
+// Formats variable name for output (replaces "/" with "-" and converts to lowercase)
+function formatVariableName(variableName: string): string {
+  return variableName.replace(/\//g, "-").toLowerCase();
+}
+
+// Generates output in SCSS, CSS, or JSON format
+function generateOutput(
+  colorVariables: { name: string; hexColor: Record<string, string> }[],
+  format: "scss" | "css" | "json"
+): string {
+  const output: string[] = [];
+
+  colorVariables.forEach((variable) => {
+    const cleanName = formatVariableName(variable.name);
+
+    Object.entries(variable.hexColor).forEach(([mode, hexValue]) => {
+      const variableName = `${cleanName}`;
+      switch (format) {
+        case "scss":
+          output.push(`$${variableName}: ${hexValue};`);
+          break;
+        case "css":
+          output.push(`--${variableName}: ${hexValue};`);
+          break;
+        case "json":
+          output.push(`"${variableName}": "${hexValue}"`);
+          break;
+      }
+    });
   });
+
+  if (format === "css") {
+    return `:root {\n${output.join("\n")}\n}`;
+  } else if (format === "json") {
+    return `{\n${output.join(",\n")}\n}`;
+  }
+
+  return output.join("\n");
 }
 
-// Fetches and logs hex color values for all color variables in collections
-async function getColorVariablesFromCollections(
-  collections: VariableCollection[]
-) {
-  const colorCollectionsData = await Promise.all(
-    collections.map(async (collection) => {
-      const colorVariables = await getColorVariablesByIds(
-        collection.variableIds
-      );
-
-      console.log(`Collection: ${collection.name} (ID: ${collection.id})`);
-      colorVariables.forEach((variable) => {
-        const colorElements = createColorElements(variable);
-        colorElements.forEach((scssVariable) => console.log(scssVariable));
-      });
-
-      return {
-        id: collection.id,
-        name: collection.name,
-        colorVariables,
-      };
-    })
-  );
-  return colorCollectionsData;
-}
-
-// Logs color variables for a single collection by ID
+// Logs color variables for a single collection by ID in different formats
 async function logColorVariablesForCollection(collectionId: string) {
   try {
     const collection = await figma.variables.getVariableCollectionByIdAsync(
@@ -74,13 +78,21 @@ async function logColorVariablesForCollection(collectionId: string) {
     }
     const colorVariables = await getColorVariablesByIds(collection.variableIds);
 
-    console.log(
-      `Checked Collection: ${collection.name} (ID: ${collection.id})`
-    );
-    colorVariables.forEach((variable) => {
-      const colorElements = createColorElements(variable);
-      colorElements.forEach((scssVariable) => console.log(scssVariable));
-    });
+    // Prepare color variables with hex values for each mode
+    const formattedVariables = colorVariables.map((variable) => ({
+      name: variable.name,
+      hexColor: Object.entries(variable.valuesByMode).reduce(
+        (hexValues, [mode, rgba]) => {
+          hexValues[mode] = rgbToHex(rgba as RGBA);
+          return hexValues;
+        },
+        {} as Record<string, string>
+      ),
+    }));
+
+    console.log("SCSS Output:\n", generateOutput(formattedVariables, "scss"));
+    console.log("CSS Output:\n", generateOutput(formattedVariables, "css"));
+    console.log("JSON Output:\n", generateOutput(formattedVariables, "json"));
   } catch (error) {
     console.error("Error retrieving color variables for collection:", error);
   }
@@ -95,12 +107,16 @@ async function populateDropdown() {
       localCollections
     );
 
-    const filteredCollections = await getColorVariablesFromCollections(
-      colorCollections
-    );
+    // Map collections to include only the fields needed for the UI dropdown
+    const formattedCollections = colorCollections.map((collection) => ({
+      id: collection.id,
+      name: collection.name,
+    }));
+
+    // Send formatted collections with IDs and names to the UI
     figma.ui.postMessage({
       type: "populateDropdown",
-      collections: filteredCollections,
+      collections: formattedCollections,
     });
   } catch (error) {
     console.error("Error in populateDropdown:", error);
