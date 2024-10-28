@@ -1,7 +1,7 @@
 {
   "name": "color-code-exporter",
   "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "description": "A Figma plugin that reads your Color Collections and effortlessly converts them into ready-to-use code formats like SCSS, CSS, or JSON, simplifying the handoff from design to development.",
   "main": "dist/code.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",

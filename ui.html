@@ -127,7 +127,7 @@
 
       .dropdown-toggle::after {
         content: "▼";
-        font-size: 14px;
+        font-size: 12px;
         position: absolute;
         right: var(--size-24); /* Align it to the right */
         top: var(--percentage-50);
@@ -193,8 +193,7 @@
     <h1>Transform Your Figma Palette into Code Instantly</h1>
     <p>
       This Figma Plugin allows you to effortlessly convert your Color
-      Collections into SCSS and CSS variables or JSON data, streamlining the
-      handoff from design to development.
+      Collections into JSON data, SCSS or CSS variables.
     </p>
 
     <h2>1. Select your Color Collection(s)</h2>
@@ -229,7 +228,6 @@
 
         if (message?.type === "populateDropdown") {
           const dropdownContent = document.getElementById("dropdownContent");
-          dropdownContent.innerHTML = ""; // Clear previous options
 
           // Populate checkboxes for individual collections
           if (message.collections.length === 0) {
@@ -261,7 +259,7 @@
               checkIfAnyChecked(); // Update 'Select All' state when items change
             });
 
-            // Now populate individual collections
+            // Populate individual collections
             message.collections.forEach((collection) => {
               const checkboxItem = document.createElement("div");
               checkboxItem.classList.add("checkbox-item");
@@ -290,7 +288,7 @@
         }
       });
 
-      // Function to check if all checkboxes are checked and update 'Select All'
+      // Helper Function to check if all checkboxes are checked and update 'Select All'
       function checkIfAnyChecked() {
         const allCheckboxes = document.querySelectorAll(".collection-checkbox");
         const allChecked = Array.from(allCheckboxes).every((cb) => cb.checked);
@@ -322,7 +320,6 @@
 
       // Event listener for the "Cancel" button click
       document.getElementById("cancel").addEventListener("click", () => {
-        // Send a cancel message to the parent frame
         window.parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
       });
     </script>
