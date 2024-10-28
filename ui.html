@@ -293,9 +293,27 @@
         const allCheckboxes = document.querySelectorAll(".collection-checkbox");
         const allChecked = Array.from(allCheckboxes).every((cb) => cb.checked);
         const selectAllCheckbox = document.getElementById("selectAll");
+
+        // Update the 'Select All' checkbox state
         if (selectAllCheckbox) {
           selectAllCheckbox.checked = allChecked;
         }
+
+        // Notify the plugin of each collection's checked status
+        allCheckboxes.forEach((checkbox) => {
+          const collectionId = checkbox.value;
+          const isChecked = checkbox.checked;
+          window.parent.postMessage(
+            {
+              pluginMessage: {
+                type: "collectionChecked",
+                collectionId: collectionId,
+                isChecked: isChecked,
+              },
+            },
+            "*"
+          );
+        });
       }
 
       // Toggle the dropdown visibility when clicked
