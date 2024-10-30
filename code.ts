@@ -79,24 +79,36 @@ async function logColorVariablesForCollection(
       console.warn(`Collection with ID ${collectionId} not found.`);
       return;
     }
+
     const colorVariables = await getColorVariablesByIds(collection.variableIds);
 
-    const formattedVariables = colorVariables.map((variable) => ({
-      name: variable.name,
-      hexColor: Object.entries(variable.valuesByMode).reduce(
+    const formattedVariables = colorVariables.map((variable) => {
+      // Convert direct color values to hex
+      const hexColor = Object.entries(variable.valuesByMode).reduce(
         (hexValues, [mode, rgba]) => {
-          hexValues[mode] = rgbToHex(rgba as RGBA);
+          const hexValue = rgbToHex(rgba as RGBA);
+          // Check if the output is NaN; if so, assume it's a reference
+          hexValues[mode] =
+            hexValue === "#NaNNaNNaN"
+              ? `/* ${variable.name} is a reference variable, unable to resolve */`
+              : hexValue;
           return hexValues;
         },
         {} as Record<string, string>
-      ),
-    }));
+      );
 
-    // Log output in the specified format
-    console.log(
-      `${format.toUpperCase()} Output:\n`,
-      generateOutput(formattedVariables, format)
-    );
+      return {
+        name: variable.name,
+        hexColor,
+      };
+    });
+
+    // Generate output based on the type of each variable
+    const output = formattedVariables
+      .map((variable) => generateOutput([variable], format))
+      .join("\n");
+
+    console.log(`${format.toUpperCase()} Output:\n`, output);
   } catch (error) {
     console.error("Error retrieving color variables for collection:", error);
   }
