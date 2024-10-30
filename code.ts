@@ -31,86 +31,136 @@ function formatVariableName(variableName: string): string {
   return variableName.replace(/\//g, "-").toLowerCase();
 }
 
-// Generates output in SCSS, CSS, or JSON format
 function generateOutput(
-  colorVariables: { name: string; hexColor: Record<string, string> }[],
-  format: "scss" | "css" | "json"
-): string {
-  const output: string[] = [];
+  colorVariables: {
+    name: string;
+    hexColor: Record<string, string> | "reference";
+  }[],
+  format: "scss" | "css" | "json",
+  wrapRoot: boolean = true
+): Record<string, any> | string {
+  if (format === "json") {
+    // JSON format: collect all color variables into an object for this collection
+    const collectionObject: Record<string, string> = {};
 
+    colorVariables.forEach((variable) => {
+      const cleanName = formatVariableName(variable.name);
+
+      if (variable.hexColor === "reference") {
+        collectionObject[cleanName] =
+          "/* Reference variable, unable to resolve */";
+      } else {
+        Object.entries(variable.hexColor).forEach(([_, hexValue]) => {
+          collectionObject[cleanName] = hexValue;
+        });
+      }
+    });
+
+    return collectionObject; // Directly return object without wrapping by collection name
+  }
+
+  // SCSS and CSS formatting
+  const output: string[] = [];
   colorVariables.forEach((variable) => {
     const cleanName = formatVariableName(variable.name);
 
-    Object.entries(variable.hexColor).forEach(([mode, hexValue]) => {
-      const variableName = `${cleanName}`;
-      switch (format) {
-        case "scss":
-          output.push(`$${variableName}: ${hexValue};`);
-          break;
-        case "css":
-          output.push(`--${variableName}: ${hexValue};`);
-          break;
-        case "json":
-          output.push(`"${variableName}": "${hexValue}"`);
-          break;
+    if (variable.hexColor === "reference") {
+      const placeholder = `/* Reference variable, unable to resolve */`;
+      if (format === "scss") {
+        output.push(`$${cleanName}: ${placeholder};`);
+      } else if (format === "css") {
+        output.push(`--${cleanName}: ${placeholder};`);
       }
-    });
+    } else {
+      Object.entries(variable.hexColor).forEach(([_, hexValue]) => {
+        if (format === "scss") {
+          output.push(`$${cleanName}: ${hexValue};`);
+        } else if (format === "css") {
+          output.push(`--${cleanName}: ${hexValue};`);
+        }
+      });
+    }
   });
 
-  if (format === "css") {
+  if (format === "css" && wrapRoot) {
     return `:root {\n${output.join("\n")}\n}`;
-  } else if (format === "json") {
-    return `{\n${output.join(",\n")}\n}`;
   }
 
   return output.join("\n");
 }
 
-// Logs color variables for a single collection by ID in different formats
 async function logColorVariablesForCollection(
-  collectionId: string,
+  collectionIds: string | string[],
   format: "scss" | "css" | "json"
 ) {
   try {
-    const collection = await figma.variables.getVariableCollectionByIdAsync(
-      collectionId
-    );
-    if (!collection) {
-      console.warn(`Collection with ID ${collectionId} not found.`);
-      return;
+    const ids = Array.isArray(collectionIds) ? collectionIds : [collectionIds];
+    const output: string[] = []; // Store the output for each collection
+    const allCollectionsJson: Record<string, any> = {}; // Store all collections under a single root
+
+    for (const collectionId of ids) {
+      const collection = await figma.variables.getVariableCollectionByIdAsync(
+        collectionId
+      );
+      if (!collection) {
+        console.warn(`Collection with ID ${collectionId} not found.`);
+        continue;
+      }
+
+      const colorVariables = await getColorVariablesByIds(
+        collection.variableIds
+      );
+      const formattedVariables = colorVariables.map((variable) => {
+        const hexColor = Object.entries(variable.valuesByMode).reduce(
+          (hexValues, [_, rgba]) => {
+            const hexValue = rgbToHex(rgba as RGBA);
+            hexValues[variable.name] =
+              hexValue === "#NaNNaNNaN"
+                ? `/* "${variable.name}" is a reference variable, unable to resolve */`
+                : hexValue;
+            return hexValues;
+          },
+          {} as Record<string, string>
+        );
+
+        return {
+          name: variable.name,
+          hexColor,
+        };
+      });
+
+      if (format === "json") {
+        // Assign collection object to root JSON
+        allCollectionsJson[collection.name] = generateOutput(
+          formattedVariables,
+          format
+        );
+      } else {
+        // CSS and SCSS output as individual collections
+        const collectionOutput =
+          format === "css"
+            ? `/* ${collection.name} */\n:root {\n${generateOutput(
+                formattedVariables,
+                format,
+                false
+              )}\n}`
+            : `/* ${collection.name} */\n${generateOutput(
+                formattedVariables,
+                format
+              )}`;
+        output.push(collectionOutput);
+      }
     }
 
-    const colorVariables = await getColorVariablesByIds(collection.variableIds);
-
-    const formattedVariables = colorVariables.map((variable) => {
-      // Convert direct color values to hex
-      const hexColor = Object.entries(variable.valuesByMode).reduce(
-        (hexValues, [mode, rgba]) => {
-          const hexValue = rgbToHex(rgba as RGBA);
-          // Check if the output is NaN; if so, assume it's a reference
-          hexValues[mode] =
-            hexValue === "#NaNNaNNaN"
-              ? `/* ${variable.name} is a reference variable, unable to resolve */`
-              : hexValue;
-          return hexValues;
-        },
-        {} as Record<string, string>
-      );
-
-      return {
-        name: variable.name,
-        hexColor,
-      };
-    });
-
-    // Generate output based on the type of each variable
-    const output = formattedVariables
-      .map((variable) => generateOutput([variable], format))
-      .join("\n");
-
-    console.log(`${format.toUpperCase()} Output:\n`, output);
+    // Output JSON as a single nested object
+    if (format === "json") {
+      console.log(JSON.stringify(allCollectionsJson, null, 2));
+    } else {
+      // Log SCSS/CSS as individual collection outputs
+      console.log(output.join("\n\n"));
+    }
   } catch (error) {
-    console.error("Error retrieving color variables for collection:", error);
+    console.error("Error retrieving color variables for collections:", error);
   }
 }
 
