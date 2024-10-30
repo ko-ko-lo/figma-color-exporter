@@ -222,9 +222,22 @@
       // Notify the plugin that the UI is ready
       window.parent.postMessage({ pluginMessage: { type: "uiReady" } }, "*");
 
+      // Function to save the file in the selected format
+      function saveFile(content, format) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `color-collections.${format}`;
+        link.click();
+      }
+
       // Handle messages from the plugin
       window.addEventListener("message", (event) => {
         const message = event.data.pluginMessage;
+
+        if (message?.type === "downloadFile") {
+          saveFile(message.content, message.format);
+        }
 
         if (message?.type === "populateDropdown") {
           const dropdownContent = document.getElementById("dropdownContent");

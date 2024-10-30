@@ -92,75 +92,59 @@ function generateOutput(
 async function logColorVariablesForCollection(
   collectionIds: string | string[],
   format: "scss" | "css" | "json"
-) {
-  try {
-    const ids = Array.isArray(collectionIds) ? collectionIds : [collectionIds];
-    const output: string[] = []; // Store the output for each collection
-    const allCollectionsJson: Record<string, any> = {}; // Store all collections under a single root
+): Promise<string> {
+  // Code to generate output for each collection
+  const ids = Array.isArray(collectionIds) ? collectionIds : [collectionIds];
+  const allCollectionsJson: Record<string, any> = {};
+  const output: string[] = [];
 
-    for (const collectionId of ids) {
-      const collection = await figma.variables.getVariableCollectionByIdAsync(
-        collectionId
+  for (const collectionId of ids) {
+    const collection = await figma.variables.getVariableCollectionByIdAsync(
+      collectionId
+    );
+    if (!collection) continue;
+
+    const colorVariables = await getColorVariablesByIds(collection.variableIds);
+    const formattedVariables = colorVariables.map((variable) => {
+      const hexColor = Object.entries(variable.valuesByMode).reduce(
+        (hexValues, [_, rgba]) => {
+          const hexValue = rgbToHex(rgba as RGBA);
+          hexValues[variable.name] =
+            hexValue === "#NaNNaNNaN"
+              ? `/* "${variable.name}" is a reference variable, unable to resolve */`
+              : hexValue;
+          return hexValues;
+        },
+        {} as Record<string, string>
       );
-      if (!collection) {
-        console.warn(`Collection with ID ${collectionId} not found.`);
-        continue;
-      }
+      return { name: variable.name, hexColor };
+    });
 
-      const colorVariables = await getColorVariablesByIds(
-        collection.variableIds
-      );
-      const formattedVariables = colorVariables.map((variable) => {
-        const hexColor = Object.entries(variable.valuesByMode).reduce(
-          (hexValues, [_, rgba]) => {
-            const hexValue = rgbToHex(rgba as RGBA);
-            hexValues[variable.name] =
-              hexValue === "#NaNNaNNaN"
-                ? `/* "${variable.name}" is a reference variable, unable to resolve */`
-                : hexValue;
-            return hexValues;
-          },
-          {} as Record<string, string>
-        );
-
-        return {
-          name: variable.name,
-          hexColor,
-        };
-      });
-
-      if (format === "json") {
-        // Assign collection object to root JSON
-        allCollectionsJson[collection.name] = generateOutput(
-          formattedVariables,
-          format
-        );
-      } else {
-        // CSS and SCSS output as individual collections
-        const collectionOutput =
-          format === "css"
-            ? `/* ${collection.name} */\n:root {\n${generateOutput(
-                formattedVariables,
-                format,
-                false
-              )}\n}`
-            : `/* ${collection.name} */\n${generateOutput(
-                formattedVariables,
-                format
-              )}`;
-        output.push(collectionOutput);
-      }
-    }
-
-    // Output JSON as a single nested object
     if (format === "json") {
-      console.log(JSON.stringify(allCollectionsJson, null, 2));
+      allCollectionsJson[collection.name] = generateOutput(
+        formattedVariables,
+        format
+      );
     } else {
-      // Log SCSS/CSS as individual collection outputs
-      console.log(output.join("\n\n"));
+      const collectionOutput =
+        format === "css"
+          ? `/* ${collection.name} */\n:root {\n${generateOutput(
+              formattedVariables,
+              format,
+              false
+            )}\n}`
+          : `/* ${collection.name} */\n${generateOutput(
+              formattedVariables,
+              format
+            )}`;
+      output.push(collectionOutput);
     }
-  } catch (error) {
-    console.error("Error retrieving color variables for collections:", error);
+  }
+
+  if (format === "json") {
+    return JSON.stringify(allCollectionsJson, null, 2);
+  } else {
+    return output.join("\n\n");
   }
 }
 
@@ -211,10 +195,17 @@ figma.ui.onmessage = async (msg) => {
     const format = msg.format as "scss" | "css" | "json";
     const collectionIds = msg.collectionIds as string[];
 
-    // Loop through each selected collection ID and log the output
-    for (const collectionId of collectionIds) {
-      await logColorVariablesForCollection(collectionId, format);
-    }
+    const finalOutput = await logColorVariablesForCollection(
+      collectionIds,
+      format
+    );
+
+    // Send the output to ui.html for file download
+    figma.ui.postMessage({
+      type: "downloadFile",
+      content: finalOutput,
+      format,
+    });
   } else if (msg.type === "cancel") {
     figma.closePlugin();
   }
