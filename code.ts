@@ -26,9 +26,12 @@ async function getColorVariablesByIds(
   );
 }
 
-// Formats variable name for output (replaces "/" with "-" and converts to lowercase)
+// Formats variable name for output (replaces "/" and spaces with "-" and converts to lowercase)
 function formatVariableName(variableName: string): string {
-  return variableName.replace(/\//g, "-").toLowerCase();
+  return variableName
+    .replace(/\s+/g, "-") // Replace whitespace with a single dash
+    .replace(/\//g, "-") // Replace slashes with dashes
+    .toLowerCase();
 }
 
 function generateOutput(
@@ -37,42 +40,40 @@ function generateOutput(
     hexColor: Record<string, string> | "reference";
   }[],
   format: "scss" | "css" | "json",
-  wrapRoot: boolean = true
-): Record<string, any> | string {
+  wrapRoot: boolean = true,
+  collectionName: string = ""
+): string | Record<string, any> {
   if (format === "json") {
-    // JSON format: collect all color variables into an object for this collection
     const collectionObject: Record<string, string> = {};
-
     colorVariables.forEach((variable) => {
       const cleanName = formatVariableName(variable.name);
-
       if (variable.hexColor === "reference") {
-        collectionObject[cleanName] =
-          "/* Reference variable, unable to resolve */";
+        collectionObject[cleanName] = "Reference variable, unable to resolve";
       } else {
-        Object.entries(variable.hexColor).forEach(([_, hexValue]) => {
+        Object.entries(variable.hexColor).forEach(([mode, hexValue]) => {
           collectionObject[cleanName] = hexValue;
         });
       }
     });
-
-    return collectionObject; // Directly return object without wrapping by collection name
+    return { [collectionName]: collectionObject };
   }
 
-  // SCSS and CSS formatting
+  // SCSS and CSS formats
   const output: string[] = [];
   colorVariables.forEach((variable) => {
     const cleanName = formatVariableName(variable.name);
 
     if (variable.hexColor === "reference") {
-      const placeholder = `/* Reference variable, unable to resolve */`;
+      // Output undefined with a comment for reference variables
+      const placeholder = "undefined";
+      const comment = `/* "${variable.name}" is a reference variable, unable to resolve */`;
       if (format === "scss") {
-        output.push(`$${cleanName}: ${placeholder};`);
+        output.push(`$${cleanName}: ${placeholder}; ${comment}`);
       } else if (format === "css") {
-        output.push(`--${cleanName}: ${placeholder};`);
+        output.push(`--${cleanName}: ${placeholder}; ${comment}`);
       }
     } else {
-      Object.entries(variable.hexColor).forEach(([_, hexValue]) => {
+      Object.entries(variable.hexColor).forEach(([mode, hexValue]) => {
         if (format === "scss") {
           output.push(`$${cleanName}: ${hexValue};`);
         } else if (format === "css") {
