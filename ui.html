@@ -336,6 +336,35 @@
         event.stopPropagation();
       });
 
+      // Event listener for the "Generate Output" button click
+      document.getElementById("create").addEventListener("click", () => {
+        const selectedFormat = document.querySelector(
+          'input[name="output-format"]:checked'
+        )?.value;
+
+        // Gather checked collection IDs
+        const selectedCollections = Array.from(
+          document.querySelectorAll(".collection-checkbox:checked")
+        ).map((checkbox) => checkbox.value);
+
+        if (selectedFormat && selectedCollections.length > 0) {
+          window.parent.postMessage(
+            {
+              pluginMessage: {
+                type: "generateOutput",
+                format: selectedFormat.toLowerCase(),
+                collectionIds: selectedCollections, // Send selected collection IDs
+              },
+            },
+            "*"
+          );
+        } else {
+          alert(
+            "Please select an output format and at least one color collection."
+          );
+        }
+      });
+
       // Event listener for the "Cancel" button click
       document.getElementById("cancel").addEventListener("click", () => {
         window.parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");

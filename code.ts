@@ -67,7 +67,10 @@ function generateOutput(
 }
 
 // Logs color variables for a single collection by ID in different formats
-async function logColorVariablesForCollection(collectionId: string) {
+async function logColorVariablesForCollection(
+  collectionId: string,
+  format: "scss" | "css" | "json"
+) {
   try {
     const collection = await figma.variables.getVariableCollectionByIdAsync(
       collectionId
@@ -78,7 +81,6 @@ async function logColorVariablesForCollection(collectionId: string) {
     }
     const colorVariables = await getColorVariablesByIds(collection.variableIds);
 
-    // Prepare color variables with hex values for each mode
     const formattedVariables = colorVariables.map((variable) => ({
       name: variable.name,
       hexColor: Object.entries(variable.valuesByMode).reduce(
@@ -90,9 +92,11 @@ async function logColorVariablesForCollection(collectionId: string) {
       ),
     }));
 
-    console.log("SCSS Output:\n", generateOutput(formattedVariables, "scss"));
-    console.log("CSS Output:\n", generateOutput(formattedVariables, "css"));
-    console.log("JSON Output:\n", generateOutput(formattedVariables, "json"));
+    // Log output in the specified format
+    console.log(
+      `${format.toUpperCase()} Output:\n`,
+      generateOutput(formattedVariables, format)
+    );
   } catch (error) {
     console.error("Error retrieving color variables for collection:", error);
   }
@@ -141,12 +145,13 @@ async function filterCollectionsWithColors(
 figma.ui.onmessage = async (msg) => {
   if (msg.type === "uiReady") {
     populateDropdown();
-  } else if (msg.type === "collectionChecked") {
-    const { collectionId, isChecked } = msg;
-    if (isChecked) {
-      await logColorVariablesForCollection(collectionId);
-    } else {
-      console.log(`Collection with ID ${collectionId} was unchecked.`);
+  } else if (msg.type === "generateOutput") {
+    const format = msg.format as "scss" | "css" | "json";
+    const collectionIds = msg.collectionIds as string[];
+
+    // Loop through each selected collection ID and log the output
+    for (const collectionId of collectionIds) {
+      await logColorVariablesForCollection(collectionId, format);
     }
   } else if (msg.type === "cancel") {
     figma.closePlugin();
