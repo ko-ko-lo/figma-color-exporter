@@ -44,27 +44,33 @@ function generateOutput(
   collectionName: string = ""
 ): string | Record<string, any> {
   if (format === "json") {
+    // JSON format: Collect all variables with either hex values or "unresolved reference" for references
     const collectionObject: Record<string, string> = {};
+
     colorVariables.forEach((variable) => {
       const cleanName = formatVariableName(variable.name);
+
+      // Assign "unresolved reference" for variables marked as references
       if (variable.hexColor === "reference") {
-        collectionObject[cleanName] = "Reference variable, unable to resolve";
+        collectionObject[cleanName] = "unresolved reference";
       } else {
+        // For non-reference variables, assign the hex color value
         Object.entries(variable.hexColor).forEach(([mode, hexValue]) => {
           collectionObject[cleanName] = hexValue;
         });
       }
     });
-    return { [collectionName]: collectionObject };
+
+    // Return the collectionObject directly (removing the extra nesting layer)
+    return collectionObject;
   }
 
-  // SCSS and CSS formats
+  // SCSS and CSS formats (unchanged)
   const output: string[] = [];
   colorVariables.forEach((variable) => {
     const cleanName = formatVariableName(variable.name);
 
     if (variable.hexColor === "reference") {
-      // Output undefined with a comment for reference variables
       const placeholder = "undefined";
       const comment = `/* "${variable.name}" is a reference variable, unable to resolve */`;
       if (format === "scss") {
@@ -94,7 +100,6 @@ async function logColorVariablesForCollection(
   collectionIds: string | string[],
   format: "scss" | "css" | "json"
 ): Promise<string> {
-  // Code to generate output for each collection
   const ids = Array.isArray(collectionIds) ? collectionIds : [collectionIds];
   const allCollectionsJson: Record<string, any> = {};
   const output: string[] = [];
@@ -111,9 +116,7 @@ async function logColorVariablesForCollection(
         (hexValues, [_, rgba]) => {
           const hexValue = rgbToHex(rgba as RGBA);
           hexValues[variable.name] =
-            hexValue === "#NaNNaNNaN"
-              ? `/* "${variable.name}" is a reference variable, unable to resolve */`
-              : hexValue;
+            hexValue === "#NaNNaNNaN" ? `unresolved reference` : hexValue;
           return hexValues;
         },
         {} as Record<string, string>
@@ -122,6 +125,7 @@ async function logColorVariablesForCollection(
     });
 
     if (format === "json") {
+      // Collect each collection JSON without the extra layer
       allCollectionsJson[collection.name] = generateOutput(
         formattedVariables,
         format
