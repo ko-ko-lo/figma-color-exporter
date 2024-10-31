@@ -83,13 +83,14 @@
       }
 
       .primary-button {
-        background-color: var(--mid-brown);
+        background-color: var(--light-brown);
         color: var(--dark-berry);
-        border: var(--size-2) solid var(--mid-brown);
+        border: var(--size-2) solid var(--light-brown);
       }
 
       .primary-button:hover {
-        background-color: var(--light-brown);
+        background-color: var(--mid-brown);
+        border: var(--size-2) solid var(--mid-brown);
       }
 
       .secondary-button:hover {
@@ -126,8 +127,8 @@
       }
 
       .dropdown-toggle::after {
-        content: "▼";
-        font-size: 12px;
+        content: "\25BE";
+        font-size: var(--size-20);
         position: absolute;
         right: var(--size-24); /* Align it to the right */
         top: var(--percentage-50);
@@ -219,168 +220,162 @@
     </div>
 
     <script>
-      // Notify the plugin that the UI is ready
-      window.parent.postMessage({ pluginMessage: { type: "uiReady" } }, "*");
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Notify the plugin that the UI is ready ---
+        window.parent.postMessage({ pluginMessage: { type: "uiReady" } }, "*");
 
-      // Function to save the file in the selected format
-      function saveFile(content, format) {
-        const blob = new Blob([content], { type: "text/plain" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `color-collections.${format}`;
-        link.click();
-      }
-
-      // Handle messages from the plugin
-      window.addEventListener("message", (event) => {
-        const message = event.data.pluginMessage;
-
-        if (message?.type === "downloadFile") {
-          saveFile(message.content, message.format);
-        }
-
-        if (message?.type === "populateDropdown") {
-          const dropdownContent = document.getElementById("dropdownContent");
-
-          // Populate checkboxes for individual collections
-          if (message.collections.length === 0) {
-            dropdownContent.innerHTML +=
-              "<p>No color collections found in your Figma file. Please create a color collection to proceed.</p>";
-          } else {
-            // Add "Select All" checkbox at the top if there are collections
-            const allCollectionsOption = document.createElement("div");
-            allCollectionsOption.classList.add("checkbox-item");
-
-            const selectAllCheckbox = document.createElement("input");
-            selectAllCheckbox.type = "checkbox";
-            selectAllCheckbox.id = "selectAll";
-
-            const selectAllLabel = document.createElement("label");
-            selectAllLabel.htmlFor = "selectAll";
-            selectAllLabel.textContent = "Select All";
-
-            allCollectionsOption.appendChild(selectAllCheckbox);
-            allCollectionsOption.appendChild(selectAllLabel);
-            dropdownContent.appendChild(allCollectionsOption);
-
-            // Event listener for "Select All" checkbox
-            selectAllCheckbox.addEventListener("change", (event) => {
-              const isChecked = event.target.checked;
-              document
-                .querySelectorAll(".collection-checkbox")
-                .forEach((checkbox) => (checkbox.checked = isChecked));
-              checkIfAnyChecked(); // Update 'Select All' state when items change
-            });
-
-            // Populate individual collections
-            message.collections.forEach((collection) => {
-              const checkboxItem = document.createElement("div");
-              checkboxItem.classList.add("checkbox-item");
-
-              const checkbox = document.createElement("input");
-              checkbox.type = "checkbox";
-              checkbox.id = collection.id;
-              checkbox.value = collection.id;
-              checkbox.classList.add("collection-checkbox");
-
-              const label = document.createElement("label");
-              label.htmlFor = collection.id;
-              label.textContent = collection.name;
-
-              checkboxItem.appendChild(checkbox);
-              checkboxItem.appendChild(label);
-
-              dropdownContent.appendChild(checkboxItem);
-
-              // Add listener to update "Select All" state when any item changes
-              checkbox.addEventListener("change", checkIfAnyChecked);
-            });
+        // --- Message Handling ---
+        window.addEventListener("message", (event) => {
+          const message = event.data.pluginMessage;
+          if (message?.type === "downloadFile") {
+            saveFile(message.content, message.format);
+          } else if (message?.type === "populateDropdown") {
+            populateDropdown(message.collections);
           }
-        } else {
-          console.warn("Unexpected message type.");
-        }
-      });
-
-      // Helper Function to check if all checkboxes are checked and update 'Select All'
-      function checkIfAnyChecked() {
-        const allCheckboxes = document.querySelectorAll(".collection-checkbox");
-        const allChecked = Array.from(allCheckboxes).every((cb) => cb.checked);
-        const selectAllCheckbox = document.getElementById("selectAll");
-
-        // Update the 'Select All' checkbox state
-        if (selectAllCheckbox) {
-          selectAllCheckbox.checked = allChecked;
-        }
-
-        // Notify the plugin of each collection's checked status
-        allCheckboxes.forEach((checkbox) => {
-          const collectionId = checkbox.value;
-          const isChecked = checkbox.checked;
-          window.parent.postMessage(
-            {
-              pluginMessage: {
-                type: "collectionChecked",
-                collectionId: collectionId,
-                isChecked: isChecked,
-              },
-            },
-            "*"
-          );
         });
-      }
 
-      // Toggle the dropdown visibility when clicked
-      const dropdownToggle = document.getElementById("dropdownToggle");
-      const dropdownContent = document.getElementById("dropdownContent");
+        // --- Populate Dropdown ---
+        function populateDropdown(collections) {
+          const dropdownContent = document.getElementById("dropdownContent");
+          dropdownContent.innerHTML = collections.length
+            ? ""
+            : "<p>No color collections found in your Figma file. Please create a color collection to proceed.</p>";
 
-      dropdownToggle.addEventListener("click", () => {
-        dropdownContent.classList.toggle("active");
-      });
-
-      // Close dropdown if clicked outside of it
-      window.addEventListener("click", function (event) {
-        if (!dropdownToggle.contains(event.target)) {
-          dropdownContent.classList.remove("active");
+          if (collections.length > 0) {
+            dropdownContent.appendChild(createSelectAllOption());
+            collections.forEach((collection) =>
+              dropdownContent.appendChild(createCheckboxItem(collection))
+            );
+          }
         }
-      });
 
-      // Prevent dropdown content click events from propagating (so the dropdown doesn't close)
-      dropdownContent.addEventListener("click", (event) => {
-        event.stopPropagation();
-      });
+        // --- Create Checkbox Options ---
+        function createSelectAllOption() {
+          const selectAllOption = document.createElement("div");
+          selectAllOption.classList.add("checkbox-item");
 
-      // Event listener for the "Generate Output" button click
-      document.getElementById("create").addEventListener("click", () => {
-        const selectedFormat = document.querySelector(
-          'input[name="output-format"]:checked'
-        )?.value;
+          const selectAllCheckbox = document.createElement("input");
+          selectAllCheckbox.type = "checkbox";
+          selectAllCheckbox.id = "selectAll";
 
-        // Gather checked collection IDs
-        const selectedCollections = Array.from(
-          document.querySelectorAll(".collection-checkbox:checked")
-        ).map((checkbox) => checkbox.value);
+          const selectAllLabel = document.createElement("label");
+          selectAllLabel.htmlFor = "selectAll";
+          selectAllLabel.textContent = "Select All";
 
-        if (selectedFormat && selectedCollections.length > 0) {
-          window.parent.postMessage(
-            {
-              pluginMessage: {
-                type: "generateOutput",
-                format: selectedFormat.toLowerCase(),
-                collectionIds: selectedCollections, // Send selected collection IDs
+          selectAllCheckbox.addEventListener("change", (e) => {
+            const isChecked = e.target.checked;
+            document
+              .querySelectorAll(".collection-checkbox")
+              .forEach((checkbox) => (checkbox.checked = isChecked));
+            checkIfAnyChecked();
+          });
+
+          selectAllOption.appendChild(selectAllCheckbox);
+          selectAllOption.appendChild(selectAllLabel);
+          return selectAllOption;
+        }
+
+        function createCheckboxItem(collection) {
+          const checkboxItem = document.createElement("div");
+          checkboxItem.classList.add("checkbox-item");
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.id = collection.id;
+          checkbox.value = collection.id;
+          checkbox.classList.add("collection-checkbox");
+
+          const label = document.createElement("label");
+          label.htmlFor = collection.id;
+          label.textContent = collection.name;
+
+          checkbox.addEventListener("change", checkIfAnyChecked);
+
+          checkboxItem.appendChild(checkbox);
+          checkboxItem.appendChild(label);
+          return checkboxItem;
+        }
+
+        // --- Checkbox State Management ---
+        function checkIfAnyChecked() {
+          const allCheckboxes = Array.from(
+            document.querySelectorAll(".collection-checkbox")
+          );
+          const selectAllCheckbox = document.getElementById("selectAll");
+
+          const allChecked = allCheckboxes.every((cb) => cb.checked);
+          if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+
+          allCheckboxes.forEach((checkbox) => {
+            window.parent.postMessage(
+              {
+                pluginMessage: {
+                  type: "collectionChecked",
+                  collectionId: checkbox.value,
+                  isChecked: checkbox.checked,
+                },
               },
-            },
-            "*"
-          );
-        } else {
-          alert(
-            "Please select an Output Format and at least one Color Collection."
-          );
+              "*"
+            );
+          });
         }
-      });
 
-      // Event listener for the "Cancel" button click
-      document.getElementById("cancel").addEventListener("click", () => {
-        window.parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+        // --- Dropdown Toggle ---
+        function toggleDropdown(event) {
+          dropdownContent.classList.toggle("active");
+          event.stopPropagation();
+        }
+
+        const dropdownToggle = document.getElementById("dropdownToggle");
+        const dropdownContent = document.getElementById("dropdownContent");
+
+        dropdownToggle.addEventListener("click", toggleDropdown);
+        window.addEventListener("click", () =>
+          dropdownContent.classList.remove("active")
+        );
+        dropdownContent.addEventListener("click", (event) =>
+          event.stopPropagation()
+        );
+
+        // --- Button Click Handlers ---
+        document.getElementById("create").addEventListener("click", () => {
+          const selectedFormat = document.querySelector(
+            'input[name="output-format"]:checked'
+          )?.value;
+          const selectedCollections = Array.from(
+            document.querySelectorAll(".collection-checkbox:checked")
+          ).map((checkbox) => checkbox.value);
+
+          if (selectedFormat && selectedCollections.length > 0) {
+            window.parent.postMessage(
+              {
+                pluginMessage: {
+                  type: "generateOutput",
+                  format: selectedFormat.toLowerCase(),
+                  collectionIds: selectedCollections,
+                },
+              },
+              "*"
+            );
+          } else {
+            alert(
+              "Please select an Output Format and at least one Color Collection."
+            );
+          }
+        });
+
+        document.getElementById("cancel").addEventListener("click", () => {
+          window.parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+        });
+
+        // --- Save the file in the selected format ---
+        function saveFile(content, format) {
+          const blob = new Blob([content], { type: "text/plain" });
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `color-collections.${format}`;
+          link.click();
+        }
       });
     </script>
   </body>
