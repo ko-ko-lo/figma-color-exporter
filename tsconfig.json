@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
     "moduleResolution": "node",
     "module": "esnext",
     "strict": true,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./node_modules/@figma"
-    ],
-    "outDir": "./dist" // direct js output to this folder
-  }
+    "outDir": "./dist",
+    "types": ["@figma/plugin-typings"],
+    "lib": ["ES2022"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
