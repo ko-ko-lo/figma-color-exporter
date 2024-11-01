@@ -1,32 +1,44 @@
-// Helper Function - retrieves and filters color variables by ID
+// Retrieves and filters color variables by ID
 export async function getColorVariablesByIds(
   variableIds: string[]
 ): Promise<Variable[]> {
   const variables = await Promise.all(
-    variableIds.map((id) => figma.variables.getVariableByIdAsync(id))
+    variableIds.map(async (id) => {
+      try {
+        return await figma.variables.getVariableByIdAsync(id);
+      } catch (error) {
+        console.error(`Error retrieving variable with ID ${id}:`, error);
+        return null;
+      }
+    })
   );
+  // Filter out null values and non-color variables
   return variables.filter(
     (variable): variable is Variable =>
       variable !== null && variable.resolvedType === "COLOR"
   );
 }
 
-// Helper function to filter collections containing color variables
+// Filters collections to only those that contain color variables
 export async function filterCollectionsWithColors(
   collections: VariableCollection[]
 ): Promise<VariableCollection[]> {
-  const collectionPromises = collections.map(async (collection) => {
-    const colorVariables = await getColorVariablesByIds(collection.variableIds);
-    return colorVariables.length > 0 ? collection : null;
-  });
-  const results = await Promise.all(collectionPromises);
-  return results.filter(
+  const filteredCollections = await Promise.all(
+    collections.map(async (collection) => {
+      const colorVariables = await getColorVariablesByIds(
+        collection.variableIds
+      );
+      return colorVariables.length > 0 ? collection : null;
+    })
+  );
+  // Return only collections that have color variables
+  return filteredCollections.filter(
     (collection): collection is VariableCollection => collection !== null
   );
 }
 
-// Fetches and sends color collections to the UI
-export async function populateDropdown() {
+// Populates dropdown with collections containing color variables and sends to UI
+export async function populateDropdown(): Promise<void> {
   try {
     const localCollections =
       await figma.variables.getLocalVariableCollectionsAsync();
@@ -34,13 +46,14 @@ export async function populateDropdown() {
       localCollections
     );
 
-    // Map collections to include only the fields needed for the UI dropdown
-    const formattedCollections = colorCollections.map((collection) => ({
-      id: collection.id,
-      name: collection.name,
-    }));
+    // Structure dropdown items
+    const formattedCollections: { id: string; name: string }[] =
+      colorCollections.map((collection) => ({
+        id: collection.id,
+        name: collection.name,
+      }));
 
-    // Send formatted collections with IDs and names to the UI
+    // Send formatted collections to the UI
     figma.ui.postMessage({
       type: "populateDropdown",
       collections: formattedCollections,
