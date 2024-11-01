@@ -1,28 +1,8 @@
-import { rgbToHex } from "./utilities";
+import { getColorVariablesByIds, populateDropdown } from "./api";
+import { formatVariableName, rgbToHex } from "./utilities";
 
 figma.showUI(__html__);
 figma.ui.resize(600, 560);
-
-// Helper Function - retrieves and filters color variables by ID
-async function getColorVariablesByIds(
-  variableIds: string[]
-): Promise<Variable[]> {
-  const variables = await Promise.all(
-    variableIds.map((id) => figma.variables.getVariableByIdAsync(id))
-  );
-  return variables.filter(
-    (variable): variable is Variable =>
-      variable !== null && variable.resolvedType === "COLOR"
-  );
-}
-
-// Formats variable name for output (replaces "/" and spaces with "-" and converts to lowercase)
-function formatVariableName(variableName: string): string {
-  return variableName
-    .replace(/\s+/g, "-") // Replace whitespace with a single dash
-    .replace(/\//g, "-") // Replace slashes with dashes
-    .toLowerCase();
-}
 
 function generateOutput(
   colorVariables: {
@@ -55,7 +35,7 @@ function generateOutput(
     return collectionObject;
   }
 
-  // SCSS and CSS formats (unchanged)
+  // SCSS and CSS formats
   const output: string[] = [];
   colorVariables.forEach((variable) => {
     const cleanName = formatVariableName(variable.name);
@@ -141,45 +121,6 @@ async function logColorVariablesForCollection(
   } else {
     return output.join("\n\n");
   }
-}
-
-// Fetches and sends color collections to the UI
-async function populateDropdown() {
-  try {
-    const localCollections =
-      await figma.variables.getLocalVariableCollectionsAsync();
-    const colorCollections = await filterCollectionsWithColors(
-      localCollections
-    );
-
-    // Map collections to include only the fields needed for the UI dropdown
-    const formattedCollections = colorCollections.map((collection) => ({
-      id: collection.id,
-      name: collection.name,
-    }));
-
-    // Send formatted collections with IDs and names to the UI
-    figma.ui.postMessage({
-      type: "populateDropdown",
-      collections: formattedCollections,
-    });
-  } catch (error) {
-    console.error("Error in populateDropdown:", error);
-  }
-}
-
-// Helper function to filter collections containing color variables
-async function filterCollectionsWithColors(
-  collections: VariableCollection[]
-): Promise<VariableCollection[]> {
-  const collectionPromises = collections.map(async (collection) => {
-    const colorVariables = await getColorVariablesByIds(collection.variableIds);
-    return colorVariables.length > 0 ? collection : null;
-  });
-  const results = await Promise.all(collectionPromises);
-  return results.filter(
-    (collection): collection is VariableCollection => collection !== null
-  );
 }
 
 // Handle UI messages
