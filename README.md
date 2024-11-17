@@ -1,40 +1,33 @@
-Below are the steps to get your plugin running. You can also find instructions at:
+# Hexify Plugin
 
-  https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+_A simple tool to export Figma color collections to SCSS, CSS, or JSON._
 
-This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
+Hexify is a Figma plugin built to streamline the process of converting color collections into code. It eliminates the repetitive task of manually copying colors by letting you export collections directly from Figma in a SCSS, CSS or JSON format.
 
-First, download Node.js which comes with NPM. This will allow you to install TypeScript and other
-libraries. You can find the download link here:
 
-  https://nodejs.org/en/download/
+![hexify-teaser](https://github.com/user-attachments/assets/4e03aca0-ee79-4d14-8120-c78f5b220e4e)
 
-Next, install TypeScript using the command:
 
-  npm install -g typescript
+## How to use
 
-Finally, in the directory of your plugin, get the latest type definitions for the plugin API by running:
+- Select your color collection(s)
+- Choose your export format (JSON, SCSS, or CSS)
+- Click Generate Output to download your color variables
 
-  npm install --save-dev @figma/plugin-typings
+## Tech Stack
 
-If you are familiar with JavaScript, TypeScript will look very familiar. In fact, valid JavaScript code
-is already valid Typescript code.
+- **Figma API**: Retrieves and processes color collections.
+- **TypeScript & Webpack**: Core logic and module bundling.
+- **HTML & CSS**: For the plugin UI.
 
-TypeScript adds type annotations to variables. This allows code editors such as Visual Studio Code
-to provide information about the Figma API while you are writing code, as well as help catch bugs
-you previously didn't notice.
+## Development Notes
 
-For more information, visit https://www.typescriptlang.org/
+**Hexify uses a modular architecture:**
 
-Using TypeScript requires a compiler to convert TypeScript (code.ts) into JavaScript (code.js)
-for the browser to run.
-
-We recommend writing TypeScript code using Visual Studio code:
-
-1. Download Visual Studio Code if you haven't already: https://code.visualstudio.com/.
-2. Open this directory in Visual Studio Code.
-3. Compile TypeScript to JavaScript: Run the "Terminal > Run Build Task..." menu item,
-    then select "npm: watch". You will have to do this again every time
-    you reopen Visual Studio Code.
-
-That's it! Visual Studio Code will regenerate the JavaScript file every time you save.
+- **UI Layer**: Handles user input and displays feedback.
+- **UMain Logic (code.ts)**: Coordinates API calls and data processing.
+- **Helper Modules:**:
+   - api.ts fetches and filters color data.
+   - utilities.ts formats colors to Hex and generates SCSS, CSS, or JSON.
+ 
+  
