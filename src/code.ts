@@ -6,10 +6,16 @@ import {
   rgbToHex,
 } from "./utilities";
 
-figma.showUI(__html__);
-figma.ui.resize(600, 560);
+figma.showUI(__html__, {
+  width: 600,
+  height: 560,
+  title: "Hexify: Export Color Collection in SCSS, CSS or JSON",
+});
 
-// Helper function to format a color variable
+/* ------------------------------------------------------------------
+Helper function to format a color variable
+------------------------------------------------------------------ */
+
 function formatColorVariable(variable: Variable) {
   const hexColor = Object.entries(variable.valuesByMode).reduce(
     (hexValues, [_, rgba]) => {

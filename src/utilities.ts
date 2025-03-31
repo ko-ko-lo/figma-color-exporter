@@ -1,9 +1,30 @@
+/**
+ * ------------------------------------------------------------
+ * utilities.ts
+ *
+ * Helper module for formatting Figma color variables into
+ * SCSS, CSS, and JSON. Handles color conversion, name cleanup,
+ * and output formatting.
+ *
+ * Functions:
+ * - rgbToHex: Converts RGB(A) to hex string
+ * - formatVariableName: Cleans up variable names
+ * - sortColorVariables: Sorts color variables by collection prefix and numeric suffix
+ * - generateScssOutput: Outputs SCSS with sorted variables
+ * - generateCssOutput: Outputs CSS (optionally inside :root)
+ * - generateJsonOutput: Outputs a raw JSON color map
+ * ------------------------------------------------------------
+ */
+
 type ColorVariable = {
   name: string;
   hexColor: Record<string, string> | "reference";
 };
 
-// Converts an RGB(A) color to a Hex string
+/* ------------------------------------------------------------------
+Converts an RGB(A) color to a Hex string
+------------------------------------------------------------------ */
+
 export function rgbToHex(color: RGB | RGBA): string {
   const toHex = (value: number): string => {
     const hex = Math.round(value * 255).toString(16);
@@ -17,7 +38,10 @@ export function rgbToHex(color: RGB | RGBA): string {
     : `#${hex}`;
 }
 
-// Formats a variable name for output
+/* ------------------------------------------------------------------
+Formats a variable name for output
+------------------------------------------------------------------ */
+
 export function formatVariableName(variableName: string): string {
   return variableName
     .replace(/\s+/g, "-") // Replace whitespace with a single dash
@@ -25,7 +49,10 @@ export function formatVariableName(variableName: string): string {
     .toLowerCase();
 }
 
-// Formats a single color variable entry based on its prefix
+/* ------------------------------------------------------------------
+Formats a single color variable entry based on its prefix
+------------------------------------------------------------------ */
+
 function formatVariable(variable: ColorVariable, prefix: string): string {
   const cleanName = formatVariableName(variable.name);
 
@@ -37,13 +64,37 @@ function formatVariable(variable: ColorVariable, prefix: string): string {
   }
 }
 
-// JSON Output Helper
+/* ------------------------------------------------------------------
+Sorts color variables by collection prefix and numeric suffix
+------------------------------------------------------------------ */
+function sortColorVariables(colorVariables: ColorVariable[]): ColorVariable[] {
+  return [...colorVariables].sort((a, b) => {
+    const getParts = (name: string) => {
+      const clean = formatVariableName(name);
+      const [prefix, num] = clean.split(/-(?=\d+$)/); // splits at last dash before number
+      return { prefix, num: parseInt(num) || 0 };
+    };
+
+    const aParts = getParts(a.name);
+    const bParts = getParts(b.name);
+
+    if (aParts.prefix < bParts.prefix) return -1;
+    if (aParts.prefix > bParts.prefix) return 1;
+    return aParts.num - bParts.num;
+  });
+}
+
+/* ------------------------------------------------------------------
+JSON Output Helper
+------------------------------------------------------------------ */
+
 export function generateJsonOutput(
   colorVariables: ColorVariable[]
 ): Record<string, string> {
+  const sortedVariables = sortColorVariables(colorVariables);
   const collectionObject: Record<string, string> = {};
 
-  colorVariables.forEach((variable) => {
+  sortedVariables.forEach((variable) => {
     const cleanName = formatVariableName(variable.name);
     collectionObject[cleanName] =
       variable.hexColor === "reference"
@@ -53,19 +104,25 @@ export function generateJsonOutput(
   return collectionObject;
 }
 
-// SCSS Output Helper
+/* ------------------------------------------------------------------
+SCSS Output Helper
+------------------------------------------------------------------ */
+
 export function generateScssOutput(colorVariables: ColorVariable[]): string {
-  return colorVariables
+  return sortColorVariables(colorVariables)
     .map((variable) => formatVariable(variable, "$"))
     .join("\n");
 }
 
-// CSS Output Helper
+/* ------------------------------------------------------------------
+CSS Output Helper
+------------------------------------------------------------------ */
+
 export function generateCssOutput(
   colorVariables: ColorVariable[],
   wrapRoot: boolean
 ): string {
-  const output = colorVariables
+  const output = sortColorVariables(colorVariables)
     .map((variable) => formatVariable(variable, "--"))
     .join("\n");
   return wrapRoot ? `:root {\n${output}\n}` : output;

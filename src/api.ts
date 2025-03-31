@@ -1,4 +1,18 @@
-// Retrieves and filters color variables by ID
+/**
+ * ------------------------------------------------------------
+ * utilities.ts
+ *
+ * Helper functions to:
+ * 1. Getting local variable collections from Figma.
+ * 2. Filtering them to only those with color variables.
+ * 3. Sending the filtered list to the UI.
+ * ------------------------------------------------------------
+ */
+
+/* ------------------------------------------------------------------
+Retrieves and filters color variables by ID
+------------------------------------------------------------------ */
+
 export async function getColorVariablesByIds(
   variableIds: string[]
 ): Promise<Variable[]> {
@@ -12,6 +26,7 @@ export async function getColorVariablesByIds(
       }
     })
   );
+
   // Filter out null values and non-color variables
   return variables.filter(
     (variable): variable is Variable =>
@@ -19,7 +34,10 @@ export async function getColorVariablesByIds(
   );
 }
 
-// Filters collections to only those that contain color variables
+/* ------------------------------------------------------------------
+Filters collections to only those that contain color variables
+------------------------------------------------------------------ */
+
 export async function filterCollectionsWithColors(
   collections: VariableCollection[]
 ): Promise<VariableCollection[]> {
@@ -37,7 +55,10 @@ export async function filterCollectionsWithColors(
   );
 }
 
-// Populates dropdown with collections containing color variables and sends to UI
+/* ------------------------------------------------------------------
+Populates dropdown with collections containing color variables and sends to UI
+------------------------------------------------------------------ */
+
 export async function populateDropdown(): Promise<void> {
   try {
     const localCollections =
