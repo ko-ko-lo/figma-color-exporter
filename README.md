@@ -6,9 +6,7 @@ For more details about the development process, visit the [Portfolio Page](https
 
 Hexify is a Figma Plugin built to streamline the process of converting Color Collections into Code. It eliminates the repetitive task of manually copying colors by letting you export collections directly from Figma in a SCSS, CSS or JSON format.
 
-
-![hexify-teaser](https://github.com/user-attachments/assets/4e03aca0-ee79-4d14-8120-c78f5b220e4e)
-
+![Hexify](https://github.com/user-attachments/assets/46885cf6-c5c1-415c-8cfc-8330eaeb6444)
 
 ## How to use
 
