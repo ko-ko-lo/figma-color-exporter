@@ -1,33 +1,24 @@
+/* ------------------------------------------------------------------
+Created with 🫖 and 🤍 by Denise Kolodzey
+------------------------------------------------------------------ */
+
 import { getColorVariablesByIds, populateDropdown } from "./api";
 import {
+  formatColorVariable,
   generateCssOutput,
   generateJsonOutput,
   generateScssOutput,
-  rgbToHex,
 } from "./utilities";
 
 figma.showUI(__html__, {
   width: 600,
   height: 560,
-  title: "Hexify: Export Color Collection in SCSS, CSS or JSON",
+  title: "Hexify - Created by Denise Kolodzey",
 });
 
 /* ------------------------------------------------------------------
-Helper function to format a color variable
+Build the export output for the selected format
 ------------------------------------------------------------------ */
-
-function formatColorVariable(variable: Variable) {
-  const hexColor = Object.entries(variable.valuesByMode).reduce(
-    (hexValues, [_, rgba]) => {
-      const hexValue = rgbToHex(rgba as RGBA);
-      hexValues[variable.name] =
-        hexValue === "#NaNNaNNaN" ? "unresolved reference" : hexValue;
-      return hexValues;
-    },
-    {} as Record<string, string>
-  );
-  return { name: variable.name, hexColor };
-}
 
 async function exportColorVariables(
   collectionIds: string | string[],
@@ -44,7 +35,9 @@ async function exportColorVariables(
     if (!collection) continue;
 
     const colorVariables = await getColorVariablesByIds(collection.variableIds);
-    const formattedVariables = colorVariables.map(formatColorVariable);
+    const formattedVariables = await Promise.all(
+      colorVariables.map(formatColorVariable)
+    );
 
     if (format === "json") {
       allCollectionsJson[collection.name] =
@@ -65,7 +58,10 @@ async function exportColorVariables(
     : cssOutput.join("\n\n");
 }
 
-// Handle UI messages
+/* ------------------------------------------------------------------
+Handle UI messages
+------------------------------------------------------------------ */
+
 figma.ui.onmessage = async (msg) => {
   try {
     if (msg.type === "uiReady") {
@@ -82,6 +78,8 @@ figma.ui.onmessage = async (msg) => {
         format,
       });
     } else if (msg.type === "cancel") {
+      figma.closePlugin();
+    } else if (msg.type === "downloadCompleted") {
       figma.closePlugin();
     }
   } catch (error) {

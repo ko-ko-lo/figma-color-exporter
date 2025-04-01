@@ -13,6 +13,8 @@
  * - generateScssOutput: Outputs SCSS with sorted variables
  * - generateCssOutput: Outputs CSS (optionally inside :root)
  * - generateJsonOutput: Outputs a raw JSON color map
+ * - formatColorVariable: Format a single color variable (resolve RGB or reference)
+ * - resolveColor: Resolve color reference (alias) recursively (or return null)
  * ------------------------------------------------------------
  */
 
@@ -126,4 +128,59 @@ export function generateCssOutput(
     .map((variable) => formatVariable(variable, "--"))
     .join("\n");
   return wrapRoot ? `:root {\n${output}\n}` : output;
+}
+
+/* ------------------------------------------------------------------
+Format a single color variable (resolve RGB or reference)
+------------------------------------------------------------------ */
+
+export async function formatColorVariable(variable: Variable) {
+  const hexColor: Record<string, string> = {};
+
+  for (const key in variable.valuesByMode) {
+    const value = variable.valuesByMode[key];
+
+    if (value && typeof value === "object") {
+      const resolvedHex = await resolveColor(value);
+
+      hexColor[variable.name] = resolvedHex || "unresolved reference";
+    } else {
+      hexColor[variable.name] = "unresolved reference";
+    }
+  }
+
+  return {
+    name: variable.name,
+    hexColor,
+  };
+}
+
+/* ------------------------------------------------------------------
+Resolve color reference (alias) recursively (or return null)
+------------------------------------------------------------------ */
+
+export async function resolveColor(
+  value: VariableValue
+): Promise<string | null> {
+  let current = value;
+  let safetyCounter = 0;
+
+  while (current && typeof current === "object" && "type" in current) {
+    if (current.type !== "VARIABLE_ALIAS" || !current.id) break;
+
+    const referenced = await figma.variables.getVariableByIdAsync(current.id);
+    if (!referenced) return null;
+
+    const refModeId = Object.keys(referenced.valuesByMode)[0];
+    current = referenced.valuesByMode[refModeId];
+
+    // Prevent infinite loops
+    if (++safetyCounter > 10) return null;
+  }
+
+  if (current && typeof current === "object" && "r" in current) {
+    return rgbToHex(current as RGB | RGBA);
+  }
+
+  return null;
 }

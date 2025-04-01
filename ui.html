@@ -20,6 +20,7 @@
         --dropdown-padding: 14px 24px;
         --radius: 4px;
         --size-0: 0;
+        --size-1: 1px;
         --size-2: 2px;
         --size-8: 8px;
         --size-10: 10px;
@@ -100,7 +101,7 @@
       .secondary-button {
         background-color: var(--dark-berry);
         color: var(--light-brown);
-        border: var(--size-2) solid var(--mid-brown);
+        border: var(--size-1) solid var(--light-brown);
         margin-right: var(--size-24);
       }
 
@@ -191,10 +192,10 @@
     </style>
   </head>
   <body>
-    <h1>Transform Your Figma Palette into Code Instantly</h1>
+    <h1>Convert Color Collections into Code</h1>
     <p>
-      This Figma Plugin allows you to effortlessly convert your Color
-      Collections into JSON data, SCSS, or CSS variables in hex format.
+      This plugin converts Color Collections into SCSS, CSS, or JSON code with
+      hex color values.
     </p>
 
     <h2>1. Select your Color Collection(s)</h2>
@@ -374,7 +375,20 @@
           const link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
           link.download = `color-collections.${format}`;
+
+          // Append to body to ensure it works across all browsers
+          document.body.appendChild(link);
           link.click();
+
+          // Clean up
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+
+          // Time to close the Plugin
+          parent.postMessage(
+            { pluginMessage: { type: "downloadCompleted" } },
+            "*"
+          );
         }
       });
     </script>
